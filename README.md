@@ -1,9 +1,9 @@
 
-# YOLOv3Lane : YOLOv3 + Lane Detection
+# LaneDetection : Lane Detection + YOLOv3
 
 ## Syntax
 
-$ sudo ./YOLOv3Lane {image_path} {frame_step}
+$ sudo ./LaneDetection {image_path} {frame_step}
 
 default image_path : ./images_chiba
 default frame_step : 1
