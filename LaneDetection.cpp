@@ -31,223 +31,283 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <thread>
 
-#include "LaneDetection_gen.h"
 #include "util_draw.h"
 #include "util_input.h"
 #include "demo_common.h"
+
+#include "LaneDetection_gen.h"
 #include "LaneDetection_param.h"
-#include "Contours.h"
+#include "YOLOv3_gen.h"
+//#include "YOLOv3_param.h"
+
+#define SCREEN_W (get_screen_width())
+#define SCREEN_H (get_screen_height())
+#define IMAGE_PATH "./images_chiba/"
 
 using namespace std;
 using namespace dmp;
 using namespace util;
 
-#define SCREEN_W (get_screen_width())
-#define SCREEN_H (get_screen_height())
-#define IMAGE_PATH "./images_shibuya/"
-
 // Define CNN network model object
-CLaneDetection network;
+CLaneDetection laneDetection;
+CYOLOv3 yolo;
 
 // Buffer for decoded image data
 uint32_t imgView[IMAGE_W * IMAGE_H];
-
 // Buffer for pre-processed image data
 __fp16 imgProc[PROC_W * PROC_H * 3];
 
-int main(int argc, char **argv)
+// Post-processing functions, defined in YOLOv3_post.cpp
+void get_bboxes(const vector<float> &tensor, vector<float> &boxes);
+void draw_bboxes(const vector<float> &boxes, COverlayRGB &overlay);
+
+// Post-processing functions, defined in LaneDetection_post.cpp
+void fp16x2_transpose(const void *image, void* buffer);
+void draw_lane(COverlayRGB &overlay, void* buffer, bool pause);
+void draw_lane_output(COverlayRGB &overlay, void* buffer);
+void print_string(COverlayRGB &bg, string text, int x, int y, int font_size, int color);
+
+float get_elapsed_time(struct timespec& ts0)
 {
+  struct timespec ts1;
+  clock_gettime(CLOCK_REALTIME, &ts1);
+
+  if((ts1.tv_nsec - ts0.tv_nsec) <= 0 ) ts1.tv_nsec += 1000000000;
+  int pt = (ts1.tv_nsec - ts0.tv_nsec) / 1000;
+  if(pt<0) pt = 0;
+  return pt / 1000.0f;
+}
+
+void load_image(string image_name, COverlayRGB& overlay)
+{
+  decode_jpg_file(image_name, imgView, IMAGE_W, IMAGE_H);
+  overlay.convert_to_overlay_pixel_format(imgView, IMAGE_W*IMAGE_H);
+  preproc_image(imgView, imgProc, IMAGE_W, IMAGE_H, PROC_W, PROC_H,
+		0.0f, 0.0f, 0.0f, 1.0f / 255.0f, true, false);
+}
+
+void run_network()
+{
+    memcpy(yolo.get_network_input_addr_cpu(), imgProc, PROC_W * PROC_H * 6);
+    memcpy(laneDetection.get_network_input_addr_cpu(), imgProc, PROC_W * PROC_H * 6);
+    yolo.RunNetwork();
+    laneDetection.RunNetwork();
+}
+
+int main(int argc, char **argv) {
   // Initialize FB
-  if (!init_fb())
-    {
-      cout << "init_fb() failed." << endl;
-      return 1;
-    }
+  if (!init_fb()) {
+    cout << "init_fb() failed." << endl;
+    return 1;
+  }
 
   string image_path(IMAGE_PATH);
+  int frame_step = 1;
   if(argc>1) image_path = argv[1];
+  if(argc>2) frame_step = atoi(argv[2]);
+  if(image_path.back()!='/') image_path += '/';
   cout << "image_path=" << image_path << endl;
-
+  cout << "frame_step=" << frame_step << endl;
+  
   // Get input images filenames
   vector<string> image_names;
   get_jpeg_image_names(image_path, image_names);
   int num_images = image_names.size();
-  if (num_images == 0)
-    {
-      cout << "No input images." << endl;
-      return 1;
-    }
+  if (num_images == 0) {
+    cout << "No input images." << endl;
+    return 1;
+  }
 
   // Initialize network object
-  network.Verbose(0);
-  if (!network.Initialize())
-    {
-      return -1;
-    }
-  if (!network.LoadWeights(LANEDETECTION_WEIGHTS))
-    {
-      return -1;
-    }
-  if (!network.Commit())
-    {
-      return -1;
-    }
+  yolo.Verbose(0);
+  if (!yolo.Initialize()) {
+    return -1;
+  }
+  if (!yolo.LoadWeights(YOLOv3_WEIGHTS)) {
+    return -1;
+  }
+  if (!yolo.Commit()) {
+    return -1;
+  }
+
+  laneDetection.Verbose(0);
+  if (!laneDetection.Initialize()) {
+    return -1;
+  }
+  if (!laneDetection.LoadWeights(LANEDETECTION_WEIGHTS)) {
+    return -1;
+  }
+  if (!laneDetection.Commit()) {
+    return -1;
+  }
 
   // Get HW module frequency
   string conv_freq;
-  conv_freq = std::to_string(network.get_dv_info().conv_freq);
+  conv_freq = std::to_string(yolo.get_dv_info().conv_freq);
 
   // Create background and image overlay
   COverlayRGB bg_overlay(SCREEN_W, SCREEN_H);
   bg_overlay.alloc_mem_overlay(SCREEN_W, SCREEN_H);
   bg_overlay.load_ppm_img("fpgatitle");
 
-  COverlayRGB cam_overlay(SCREEN_W, SCREEN_H);
-  cam_overlay.alloc_mem_overlay(IMAGE_W, IMAGE_H);
+  COverlayRGB cam_overlay[2] = { COverlayRGB(SCREEN_W, SCREEN_H),COverlayRGB(SCREEN_W, SCREEN_H) };
+  cam_overlay[0].alloc_mem_overlay(IMAGE_W, IMAGE_H);
+  cam_overlay[1].alloc_mem_overlay(IMAGE_W, IMAGE_H);
+  unsigned cam_overlay_id = 0;
 
   // Draw background two times for front and back buffer
   const char *titles[] = {
-    "CNN - Lane Detection Demo",
-    "Draw detected lane lines",
+    "YOLOv3 with Lane Detection",
+    "Draw detected objects and lane",
   };
   for (int i = 0; i < 2; ++i) {
     bg_overlay.print_to_display(0, 0);
     print_demo_title(bg_overlay, titles);
+
+    int xpos = SCREEN_W-240;
+    int ypos = SCREEN_H-20;
+
+    print_string(bg_overlay,"'P': Draw perf info", xpos, ypos, 10, 0x00ffffff); ypos -= 20;
+    print_string(bg_overlay,"'1-9': Frame steps", xpos, ypos, 10, 0x00ffffff); ypos -= 20;
+    print_string(bg_overlay,"'S':   Save as capture%d.ppm", xpos, ypos, 10, 0x00ffffff); ypos -= 20;
+    print_string(bg_overlay,"'O':   Draw lane output on/off", xpos, ypos, 10, 0x00ffffff); ypos -= 20;
+    print_string(bg_overlay,"'L':   Draw lane line on/off", xpos, ypos, 10, 0x00ffffff); ypos -= 20;
+    print_string(bg_overlay,"'B':   Draw bbox on/off", xpos, ypos, 10, 0x00ffffff); ypos -= 20;
+    print_string(bg_overlay,"SPC:   Pause", xpos, ypos, 10, 0x00ffffff); ypos -= 20;
+    print_string(bg_overlay,"ESC:   Quit", xpos, ypos, 10, 0x00ffffff); ypos -= 20;
+
     swap_buffer();
   }
 
   int exit_code = -1;
-  int image_nr = 0, image_step = 1;
+  int image_nr = 0, image_step = frame_step;
   bool pause = false;
-  //std::vector<float> tensor;
+  bool b_bbox = true;
+  bool b_lane = true;
+  bool b_lane_output = true;
+  bool b_perf = false;
+  int capture = 0;
+  int perf_clear = 0;
 
-  // draw setup
+  vector<float> tensor;
+  vector<float> boxes;
+  // lane detection result buffer
   void* buffer = malloc(PROC_W * PROC_H * 2); // fp16x1
-  pixfmt_type pixf( cam_overlay.get_ren_buf_ref() );
-  base_ren_type ren(pixf);
-  agg::scanline_u8 sl;
-  agg::rasterizer_scanline_aa<> ras;
-  agg::rgba8 color = agg::rgba8(255,255, 0, 255);
-  agg::path_storage ps;
-  agg::conv_stroke<agg::path_storage> pg(ps);
-  pg.width(2.0);
 
-  std::vector<Point> ave_top, ave_left, ave_right;
-  
+  // preload
+  load_image( image_names[image_nr], cam_overlay[cam_overlay_id]);
+  auto th = thread(run_network);
+
+  struct timespec ts0;
+  clock_gettime(CLOCK_REALTIME, &ts0);
+
   // Enter main loop
-  while (exit_code == -1)
-    {
-      // If not pause, decode next JPEG image and do pre-processing
-      if (!pause)
-	{
-	  decode_jpg_file(image_names[image_nr], imgView, IMAGE_W, IMAGE_H);
-	  cam_overlay.convert_to_overlay_pixel_format(imgView, IMAGE_W*IMAGE_H);
+  while (exit_code == -1) {
+    struct timespec ts1;
+    clock_gettime(CLOCK_REALTIME, &ts1);
 
-	  // Pre-process the image data
-	  preproc_image(imgView, imgProc, IMAGE_W, IMAGE_H, PROC_W, PROC_H,
-			0.0f, 0.0f, 0.0f, 1.0f / 255.0f, true, false);
+    load_image(image_names[image_nr], cam_overlay[1-cam_overlay_id]);
 
-	  image_nr += image_step;
-	  image_nr %= num_images;
-	}
+    th.join();
+    int conv_time_tot = yolo.get_conv_usec() + laneDetection.get_conv_usec();
 
-      // Run network in HW
-      memcpy(network.get_network_input_addr_cpu(), imgProc, PROC_W * PROC_H * 6);
-      network.RunNetwork();
+    // Get result
+    yolo.get_final_output(tensor);
+    get_bboxes(tensor, boxes);
 
-      // Handle output from HW
-      const void* output = network.get_io_ptr() + network.get_output_layers()[0]->output_offs;
-      fp16x2_transpose(output, buffer, PROC_W, PROC_H, 2);
+    const void* output = laneDetection.get_io_ptr() + laneDetection.get_output_layers()[0]->output_offs;
+    fp16x2_transpose(output, buffer);
+    
+    // Run network
+    th = thread(run_network);
 
-      Point top(0,0x1000), left(0x1000,0), right(0,0);
-      if(!pause)
-	{
-	  std::vector<Point> sorted_pts;
-	  contours(buffer, PROC_W, PROC_H, sorted_pts);
+    // Post draw
+    if(b_bbox) draw_bboxes(boxes, cam_overlay[cam_overlay_id]);
+    if(b_lane_output) draw_lane_output(cam_overlay[cam_overlay_id], buffer);
+    if(b_lane) draw_lane(cam_overlay[cam_overlay_id], buffer, pause);
 
-	  Point top(0,0x1000), left(0x1000,0), right(0,0);
-	  for(auto& p : sorted_pts)
-	    {
-	      if(p.y < top.y) top = p;
-	      if(p.x < left.x) left = p;
-	      if(p.x > right.x) right = p;
-	    }
-	  top.x = 0;
-	  int ntop = 0;
-	  for(auto& p : sorted_pts)
-	    {
-	      if(p.y == top.y) { top.x += p.x; ntop++; };
-	    }
-	  top.x /= ntop;
+    // Draw detection result to screen
+    cam_overlay[cam_overlay_id].print_to_display(((SCREEN_W - IMAGE_W) / 2), 150);
 
-	  if( ave_top.size() > 15 ) ave_top.erase( ave_top.begin() );
-	  if( ave_left.size() > 15 ) ave_left.erase( ave_left.begin() );
-	  if( ave_right.size() > 15 ) ave_right.erase( ave_right.begin() );
+    // Output HW processing times
+    print_conv_time(bg_overlay, (235 + IMAGE_H), conv_time_tot, conv_freq);
 
-	  ave_top.push_back( top );
-	  ave_left.push_back( left );
-	  ave_right.push_back( right );
-	}
-      top = Point(0,0);
-      for(auto& p : ave_top )
-	{
-	  top.x += p.x;
-	  top.y += p.y;
-	}
-      top.x /= ave_top.size();
-      top.y /= ave_top.size();
-      
-      left = Point(0,0);
-      for(auto& p : ave_left )
-	{
-	  left.x += p.x;
-	  left.y += p.y;
-	}
-      left.x /= ave_left.size();
-      //      left.y /= ave_left.size();
-      left.y = PROC_H-1;
-      
-      right = Point(0,0);
-      for(auto& p : ave_right )
-	{
-	  right.x += p.x;
-	  right.y += p.y;
-	}
-      right.x /= ave_right.size();
-      //      right.y /= ave_right.size();
-      right.y = PROC_H-1;
-      
-      // draw lane
-      ras.reset();
-      ps.remove_all();
+    // Key controls
+    bool pause_prev = pause;
+    int key = handle_keyboard_input(exit_code, pause);
+    if(!pause_prev && pause)
+      {
+	cout << "frame number = " << image_nr << endl;
+      }
+    else if(key>='1' && key<='9')
+      {
+	image_step = key - '0';
+	cout << "frame steps=" << image_step << endl;
+      }
+    else if(key=='b' || key=='B')
+      {
+	b_bbox = !b_bbox;
+	cout << "draw bbox=" << (b_bbox? "on":"off") << endl;
+      }
+    else if(key=='l' || key=='L')
+      {
+	b_lane = !b_lane;
+	cout << "draw lane=" << (b_lane? "on":"off") << endl;
+      }
+    else if(key=='o' || key=='O')
+      {
+	b_lane_output = !b_lane_output;
+	cout << "draw lane output=" << (b_lane_output? "on":"off") << endl;
+      }
+    else if(key=='p' || key=='P')
+      {
+	b_perf = !b_perf;
+	cout << "draw perf=" << (b_perf? "on":"off") << endl;
+	perf_clear = 2;
+      }
+    else if(key=='s' || key=='O')
+      {
+	stringstream ss;
+	ss << "capture" << capture++;
+	cout << ss.str() << endl;
+	cam_overlay[cam_overlay_id].save_as_ppm_img( ss.str() );
+      }
+    if (!pause)
+      {
+	image_nr += image_step;
+	image_nr %= num_images;
+      }
+    cam_overlay_id = 1 - cam_overlay_id;
 
-      ps.move_to(left.x, left.y);
-      ps.line_to(top.x, top.y);
-      ps.line_to(right.x, right.y);
-      ras.add_path(pg);
-      agg::render_scanlines_aa_solid(ras, sl, ren, color);
-      
-      // Draw detection result to screen
-      cam_overlay.print_to_display(((SCREEN_W - IMAGE_W) / 2), 150);
+    // draw performance info
+    if(b_perf)
+      {
+	float time0 = get_elapsed_time(ts0);
+	float time1 = get_elapsed_time(ts1);
+	float fps = 1000.0f / time0;
+	
+	stringstream ss;
+	ss << " Frame:" << image_nr
+	   << " Total: "<< fixed << setprecision(0) << setw(3)
+	   << time0 << "ms CPU: " << time1 << "ms FPS:" << fps
+	   << "   ";
+	print_string(bg_overlay, ss.str(), 0, 0, 10, 0x00ffffff);
+      }
+    else if(perf_clear)
+      {
+	string clear(50,' ');
+	print_string(bg_overlay,clear, 0, 0, 10, 0x00000000);
+	perf_clear--;
+      }
 
-      // Output HW processing times
-      int conv_time_tot = network.get_conv_usec();
-      print_conv_time(bg_overlay, (235 + IMAGE_H), conv_time_tot, conv_freq);
+    clock_gettime(CLOCK_REALTIME, &ts0);
 
-      swap_buffer();
+    swap_buffer();
+  }
 
-      bool pause_prev = pause;
-      int key = handle_keyboard_input(exit_code, pause);
-      if(!pause_prev && pause)
-	{
-	  cout << "frame number = " << image_nr-1 << endl;
-	}
-      if(key>='1' && key<='9')
-	{
-	  image_step = key - '0';
-	}
-    }
+  th.join();
 
   free(buffer);
   shutdown();
