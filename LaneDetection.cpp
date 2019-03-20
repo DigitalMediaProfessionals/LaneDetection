@@ -37,36 +37,37 @@
 #include "util_input.h"
 #include "demo_common.h"
 
-#include "YOLOv3_gen.h"
 #include "LaneDetection_gen.h"
 #include "LaneDetection_param.h"
+#include "YOLOv3_gen.h"
+#include "YOLOv3_param.h"
 
 #define SCREEN_W (get_screen_width())
 #define SCREEN_H (get_screen_height())
-#define IMAGE_PATH "./images_chiba/"
+#define IMAGE_PATH "./images_lane/"
 
 using namespace std;
 using namespace dmp;
 using namespace util;
 
 // Define CNN network model object
-CYOLOv3 yolo;
 CLaneDetection laneDetection;
+CYOLOv3 yolo;
 
 // Buffer for decoded image data
 uint32_t imgView[IMAGE_W * IMAGE_H];
 // Buffer for pre-processed image data
 __fp16 imgProc[PROC_W * PROC_H * 3];
 
-// Post-processing functions, defined in YOLOv3_post.cpp
-void get_bboxes(const vector<float> &tensor, vector<float> &boxes);
-void draw_bboxes(const vector<float> &boxes, COverlayRGB &overlay);
-
 // Post-processing functions, defined in LaneDetection_post.cpp
 void fp16x2_transpose(const void *image, void* buffer);
 void draw_lane(COverlayRGB &overlay, void* buffer, bool pause);
 void draw_lane_output(COverlayRGB &overlay, void* buffer);
 void print_string(COverlayRGB &bg, string text, int x, int y, int font_size, int color);
+
+// Post-processing functions, defined in YOLOv3_post.cpp
+void get_bboxes(const vector<float> &tensor, vector<float> &boxes);
+void draw_bboxes(const vector<float> &boxes, COverlayRGB &overlay);
 
 float get_elapsed_time(struct timespec& ts0)
 {
@@ -89,10 +90,10 @@ void load_image(string image_name, COverlayRGB& overlay)
 
 void run_network()
 {
-   memcpy(yolo.get_network_input_addr_cpu(), imgProc, PROC_W * PROC_H * 6);
    memcpy(laneDetection.get_network_input_addr_cpu(), imgProc, PROC_W * PROC_H * 6);
-   yolo.RunNetwork();
+   memcpy(yolo.get_network_input_addr_cpu(), imgProc, PROC_W * PROC_H * 6);
    laneDetection.RunNetwork();
+   yolo.RunNetwork();
 }
 
 int main(int argc, char **argv)
@@ -123,19 +124,6 @@ int main(int argc, char **argv)
    }
 
    // Initialize network object
-   yolo.Verbose(0);
-   if (!yolo.Initialize())
-   {
-      return -1;
-   }
-   if (!yolo.LoadWeights(YOLOv3_WEIGHTS))
-   {
-      return -1;
-   }
-   if (!yolo.Commit())
-   {
-      return -1;
-   }
 
    laneDetection.Verbose(0);
    if (!laneDetection.Initialize())
@@ -147,6 +135,20 @@ int main(int argc, char **argv)
       return -1;
    }
    if (!laneDetection.Commit())
+   {
+      return -1;
+   }
+
+   yolo.Verbose(0);
+   if (!yolo.Initialize())
+   {
+      return -1;
+   }
+   if (!yolo.LoadWeights(YOLOv3_WEIGHTS))
+   {
+      return -1;
+   }
+   if (!yolo.Commit())
    {
       return -1;
    }

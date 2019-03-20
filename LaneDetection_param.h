@@ -22,4 +22,3 @@
 #define PROC_H 256
 
 #define LANEDETECTION_WEIGHTS "LaneDetection_weights.bin"
-#define YOLOv3_WEIGHTS "YOLOv3_weights.bin"
