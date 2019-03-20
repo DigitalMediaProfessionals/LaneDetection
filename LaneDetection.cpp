@@ -80,9 +80,13 @@ float get_elapsed_time(struct timespec& ts0)
    return pt / 1000.0f;
 }
 
-void load_image(string image_name, COverlayRGB& overlay)
+void load_image(string image_name)
 {
    decode_jpg_file(image_name, imgView, IMAGE_W, IMAGE_H);
+}
+
+void proc_image(COverlayRGB& overlay)
+{
    overlay.convert_to_overlay_pixel_format(imgView, IMAGE_W*IMAGE_H);
    preproc_image(imgView, imgProc, IMAGE_W, IMAGE_H, PROC_W, PROC_H,
 		 0.0f, 0.0f, 0.0f, 1.0f / 255.0f, true, false);
@@ -208,10 +212,12 @@ int main(int argc, char **argv)
    void* buffer = malloc(PROC_W * PROC_H * 2); // fp16x1
 
    // preload
-   load_image( image_names[image_nr], cam_overlay[cam_overlay_id]);
+   load_image(image_names[image_nr]);
+   proc_image(cam_overlay[cam_overlay_id]);
 
-   // Run network 1st
-   auto th = thread(run_network);
+   // Run threads
+   auto th_image = thread(load_image, image_names[image_nr]);
+   auto th_network = thread(run_network);
 
    struct timespec ts0;
    clock_gettime(CLOCK_REALTIME, &ts0);
@@ -222,12 +228,12 @@ int main(int argc, char **argv)
       struct timespec ts1;
       clock_gettime(CLOCK_REALTIME, &ts1);
 
-      load_image(image_names[image_nr], cam_overlay[1-cam_overlay_id]);
-
-      th.join();
+      // Get image
+      th_image.join();
+      proc_image(cam_overlay[1-cam_overlay_id]);
 
       // Handle output from HW
-      int conv_time_tot = yolo.get_conv_usec() + laneDetection.get_conv_usec();
+      th_network.join();
 
       if(b_bbox)
       {
@@ -238,9 +244,11 @@ int main(int argc, char **argv)
 	 const void* output = laneDetection.get_io_ptr() + laneDetection.get_output_layers()[0]->output_offs;
 	 fp16x2_transpose(output, buffer);
       }
-    
-      // Run network next
-      th = thread(run_network);
+      int conv_time_tot = yolo.get_conv_usec() + laneDetection.get_conv_usec();
+
+      // Run threads
+      th_image = thread(load_image, image_names[image_nr]);
+      th_network = thread(run_network);
 
       // Post draw
       if(b_bbox)
@@ -319,8 +327,8 @@ int main(int argc, char **argv)
 	
 	 stringstream ss;
 	 ss << " Frame:" << image_nr
-	    << " Total: "<< fixed << setprecision(0) << setw(3)
-	    << time0 << "ms CPU: " << time1 << "ms FPS:" << fps
+	    << " Total:"<< fixed << setprecision(0) << setw(3)
+	    << time0 << "ms CPU:" << time1 << "ms FPS:" << fps
 	    << "   ";
 	 print_string(bg_overlay, ss.str(), 0, 0, 10, 0x00ffffff);
       }
@@ -336,7 +344,8 @@ int main(int argc, char **argv)
       swap_buffer();
    }
 
-   th.join();
+   th_image.join();
+   th_network.join();
 
    free(buffer);
    shutdown();
