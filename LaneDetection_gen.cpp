@@ -28,7 +28,7 @@ CLaneDetection::~CLaneDetection() {
 }
 
 bool CLaneDetection::Initialize() {
-  if (!ReserveMemory(852048, 4521984)) {
+  if (!ReserveMemory(852048, 5898240)) {
     return false;
   }
 
@@ -62,7 +62,6 @@ bool CLaneDetection::Initialize() {
 //  ->: conv2d_1
 //  ->: conv2d_1_relu
 void CLaneDetection::Layer_0() {
-  get_layer(0).name = "conv2d_1, conv2d_1_relu";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(0).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -80,7 +79,7 @@ void CLaneDetection::Layer_0() {
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
-  conf.output_buf.offs = 589824;
+  conf.output_buf.offs = 2752512;
 
   conf.eltwise_buf.mem = NULL;
   conf.eltwise_buf.offs = 0;  // Input byte address for elementwise add (0 = UBUF Input Buffer)
@@ -111,12 +110,12 @@ void CLaneDetection::Layer_0() {
   conf.run[0].actfunc = 2;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(0);
+  layer.name = "conv2d_1";
   layer.type = LT_CONV;
   layer.input_offs = 0;
-  layer.output_offs = 589824;
+  layer.output_offs = 2752512;
   layer.output_size = 3145728;
   layer.input_dim[0] = 384;
   layer.input_dim[1] = 256;
@@ -134,7 +133,6 @@ void CLaneDetection::Layer_0() {
 //Layer_1: Convolution Layer
 //  ->: max_pooling2d_1
 void CLaneDetection::Layer_1() {
-  get_layer(1).name = "max_pooling2d_1";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(1).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -148,11 +146,11 @@ void CLaneDetection::Layer_1() {
   conf.z = 1;  // Input Depth
   conf.c = 16;  // Input Channels
   conf.input_buf.mem = io_mem_;
-  conf.input_buf.offs = 589824;
+  conf.input_buf.offs = 2752512;
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
-  conf.output_buf.offs = 3735552;
+  conf.output_buf.offs = 1966080;
 
   conf.eltwise_buf.mem = NULL;
   conf.eltwise_buf.offs = 0;  // Input byte address for elementwise add (0 = UBUF Input Buffer)
@@ -182,12 +180,12 @@ void CLaneDetection::Layer_1() {
   conf.run[0].actfunc = 0;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(1);
+  layer.name = "max_pooling2d_1";
   layer.type = LT_CONV;
-  layer.input_offs = 589824;
-  layer.output_offs = 3735552;
+  layer.input_offs = 2752512;
+  layer.output_offs = 1966080;
   layer.output_size = 786432;
   layer.input_dim[0] = 384;
   layer.input_dim[1] = 256;
@@ -206,7 +204,6 @@ void CLaneDetection::Layer_1() {
 //  ->: conv2d_2
 //  ->: conv2d_2_relu
 void CLaneDetection::Layer_2() {
-  get_layer(2).name = "conv2d_2, conv2d_2_relu";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(2).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -220,11 +217,11 @@ void CLaneDetection::Layer_2() {
   conf.z = 1;  // Input Depth
   conf.c = 16;  // Input Channels
   conf.input_buf.mem = io_mem_;
-  conf.input_buf.offs = 3735552;
+  conf.input_buf.offs = 1966080;
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
-  conf.output_buf.offs = 0;
+  conf.output_buf.offs = 393216;
 
   conf.eltwise_buf.mem = NULL;
   conf.eltwise_buf.offs = 0;  // Input byte address for elementwise add (0 = UBUF Input Buffer)
@@ -255,12 +252,12 @@ void CLaneDetection::Layer_2() {
   conf.run[0].actfunc = 2;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(2);
+  layer.name = "conv2d_2";
   layer.type = LT_CONV;
-  layer.input_offs = 3735552;
-  layer.output_offs = 0;
+  layer.input_offs = 1966080;
+  layer.output_offs = 393216;
   layer.output_size = 1572864;
   layer.input_dim[0] = 192;
   layer.input_dim[1] = 128;
@@ -278,7 +275,6 @@ void CLaneDetection::Layer_2() {
 //Layer_3: Convolution Layer
 //  ->: max_pooling2d_2
 void CLaneDetection::Layer_3() {
-  get_layer(3).name = "max_pooling2d_2";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(3).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -292,11 +288,11 @@ void CLaneDetection::Layer_3() {
   conf.z = 1;  // Input Depth
   conf.c = 32;  // Input Channels
   conf.input_buf.mem = io_mem_;
-  conf.input_buf.offs = 0;
+  conf.input_buf.offs = 393216;
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
-  conf.output_buf.offs = 1572864;
+  conf.output_buf.offs = 0;
 
   conf.eltwise_buf.mem = NULL;
   conf.eltwise_buf.offs = 0;  // Input byte address for elementwise add (0 = UBUF Input Buffer)
@@ -326,12 +322,12 @@ void CLaneDetection::Layer_3() {
   conf.run[0].actfunc = 0;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(3);
+  layer.name = "max_pooling2d_2";
   layer.type = LT_CONV;
-  layer.input_offs = 0;
-  layer.output_offs = 1572864;
+  layer.input_offs = 393216;
+  layer.output_offs = 0;
   layer.output_size = 393216;
   layer.input_dim[0] = 192;
   layer.input_dim[1] = 128;
@@ -350,7 +346,6 @@ void CLaneDetection::Layer_3() {
 //  ->: conv2d_3
 //  ->: conv2d_3_relu
 void CLaneDetection::Layer_4() {
-  get_layer(4).name = "conv2d_3, conv2d_3_relu";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(4).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -364,11 +359,11 @@ void CLaneDetection::Layer_4() {
   conf.z = 1;  // Input Depth
   conf.c = 32;  // Input Channels
   conf.input_buf.mem = io_mem_;
-  conf.input_buf.offs = 1572864;
+  conf.input_buf.offs = 0;
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
-  conf.output_buf.offs = 0;
+  conf.output_buf.offs = 442368;
 
   conf.eltwise_buf.mem = NULL;
   conf.eltwise_buf.offs = 0;  // Input byte address for elementwise add (0 = UBUF Input Buffer)
@@ -399,12 +394,12 @@ void CLaneDetection::Layer_4() {
   conf.run[0].actfunc = 2;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(4);
+  layer.name = "conv2d_3";
   layer.type = LT_CONV;
-  layer.input_offs = 1572864;
-  layer.output_offs = 0;
+  layer.input_offs = 0;
+  layer.output_offs = 442368;
   layer.output_size = 393216;
   layer.input_dim[0] = 96;
   layer.input_dim[1] = 64;
@@ -424,7 +419,6 @@ void CLaneDetection::Layer_4() {
 //  ->: conv2d_4_relu
 //  ->: max_pooling2d_3
 void CLaneDetection::Layer_5() {
-  get_layer(5).name = "conv2d_4, conv2d_4_relu, max_pooling2d_3";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(5).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -438,11 +432,11 @@ void CLaneDetection::Layer_5() {
   conf.z = 1;  // Input Depth
   conf.c = 32;  // Input Channels
   conf.input_buf.mem = io_mem_;
-  conf.input_buf.offs = 0;
+  conf.input_buf.offs = 442368;
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
-  conf.output_buf.offs = 393216;
+  conf.output_buf.offs = 245760;
 
   conf.eltwise_buf.mem = NULL;
   conf.eltwise_buf.offs = 0;  // Input byte address for elementwise add (0 = UBUF Input Buffer)
@@ -474,12 +468,12 @@ void CLaneDetection::Layer_5() {
   conf.run[0].actfunc = 2;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(5);
+  layer.name = "max_pooling2d_3";
   layer.type = LT_CONV;
-  layer.input_offs = 0;
-  layer.output_offs = 393216;
+  layer.input_offs = 442368;
+  layer.output_offs = 245760;
   layer.output_size = 196608;
   layer.input_dim[0] = 96;
   layer.input_dim[1] = 64;
@@ -498,7 +492,6 @@ void CLaneDetection::Layer_5() {
 //  ->: conv2d_5
 //  ->: conv2d_5_relu
 void CLaneDetection::Layer_6() {
-  get_layer(6).name = "conv2d_5, conv2d_5_relu";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(6).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -512,11 +505,11 @@ void CLaneDetection::Layer_6() {
   conf.z = 1;  // Input Depth
   conf.c = 64;  // Input Channels
   conf.input_buf.mem = io_mem_;
-  conf.input_buf.offs = 393216;
+  conf.input_buf.offs = 245760;
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
-  conf.output_buf.offs = 0;
+  conf.output_buf.offs = 49152;
 
   conf.eltwise_buf.mem = NULL;
   conf.eltwise_buf.offs = 0;  // Input byte address for elementwise add (0 = UBUF Input Buffer)
@@ -547,12 +540,12 @@ void CLaneDetection::Layer_6() {
   conf.run[0].actfunc = 2;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(6);
+  layer.name = "conv2d_5";
   layer.type = LT_CONV;
-  layer.input_offs = 393216;
-  layer.output_offs = 0;
+  layer.input_offs = 245760;
+  layer.output_offs = 49152;
   layer.output_size = 196608;
   layer.input_dim[0] = 48;
   layer.input_dim[1] = 32;
@@ -572,7 +565,6 @@ void CLaneDetection::Layer_6() {
 //  ->: conv2d_6_relu
 //  ->: max_pooling2d_4
 void CLaneDetection::Layer_7() {
-  get_layer(7).name = "conv2d_6, conv2d_6_relu, max_pooling2d_4";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(7).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -586,11 +578,11 @@ void CLaneDetection::Layer_7() {
   conf.z = 1;  // Input Depth
   conf.c = 64;  // Input Channels
   conf.input_buf.mem = io_mem_;
-  conf.input_buf.offs = 0;
+  conf.input_buf.offs = 49152;
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
-  conf.output_buf.offs = 196608;
+  conf.output_buf.offs = 0;
 
   conf.eltwise_buf.mem = NULL;
   conf.eltwise_buf.offs = 0;  // Input byte address for elementwise add (0 = UBUF Input Buffer)
@@ -622,12 +614,12 @@ void CLaneDetection::Layer_7() {
   conf.run[0].actfunc = 2;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(7);
+  layer.name = "max_pooling2d_4";
   layer.type = LT_CONV;
-  layer.input_offs = 0;
-  layer.output_offs = 196608;
+  layer.input_offs = 49152;
+  layer.output_offs = 0;
   layer.output_size = 49152;
   layer.input_dim[0] = 48;
   layer.input_dim[1] = 32;
@@ -647,7 +639,6 @@ void CLaneDetection::Layer_7() {
 //  ->: conv2d_7_relu
 //  ->: max_pooling2d_5
 void CLaneDetection::Layer_8() {
-  get_layer(8).name = "conv2d_7, conv2d_7_relu, max_pooling2d_5";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(8).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -661,11 +652,11 @@ void CLaneDetection::Layer_8() {
   conf.z = 1;  // Input Depth
   conf.c = 64;  // Input Channels
   conf.input_buf.mem = io_mem_;
-  conf.input_buf.offs = 196608;
+  conf.input_buf.offs = 0;
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
-  conf.output_buf.offs = 0;
+  conf.output_buf.offs = 98304;
 
   conf.eltwise_buf.mem = NULL;
   conf.eltwise_buf.offs = 0;  // Input byte address for elementwise add (0 = UBUF Input Buffer)
@@ -697,12 +688,12 @@ void CLaneDetection::Layer_8() {
   conf.run[0].actfunc = 2;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(8);
+  layer.name = "max_pooling2d_5";
   layer.type = LT_CONV;
-  layer.input_offs = 196608;
-  layer.output_offs = 0;
+  layer.input_offs = 0;
+  layer.output_offs = 98304;
   layer.output_size = 24576;
   layer.input_dim[0] = 24;
   layer.input_dim[1] = 16;
@@ -720,7 +711,6 @@ void CLaneDetection::Layer_8() {
 //Layer_9: Convolution Layer
 //  ->: up_sampling2d_1
 void CLaneDetection::Layer_9() {
-  get_layer(9).name = "up_sampling2d_1";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(9).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -734,11 +724,11 @@ void CLaneDetection::Layer_9() {
   conf.z = 1;  // Input Depth
   conf.c = 128;  // Input Channels
   conf.input_buf.mem = io_mem_;
-  conf.input_buf.offs = 0;
+  conf.input_buf.offs = 98304;
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
-  conf.output_buf.offs = 24576;
+  conf.output_buf.offs = 0;
 
   conf.eltwise_buf.mem = NULL;
   conf.eltwise_buf.offs = 0;  // Input byte address for elementwise add (0 = UBUF Input Buffer)
@@ -768,12 +758,12 @@ void CLaneDetection::Layer_9() {
   conf.run[0].actfunc = 0;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(9);
+  layer.name = "up_sampling2d_1";
   layer.type = LT_CONV;
-  layer.input_offs = 0;
-  layer.output_offs = 24576;
+  layer.input_offs = 98304;
+  layer.output_offs = 0;
   layer.output_size = 98304;
   layer.input_dim[0] = 12;
   layer.input_dim[1] = 8;
@@ -792,7 +782,6 @@ void CLaneDetection::Layer_9() {
 //  ->: conv2d_8
 //  ->: conv2d_8_relu
 void CLaneDetection::Layer_10() {
-  get_layer(10).name = "conv2d_8, conv2d_8_relu";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(10).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -806,11 +795,11 @@ void CLaneDetection::Layer_10() {
   conf.z = 1;  // Input Depth
   conf.c = 128;  // Input Channels
   conf.input_buf.mem = io_mem_;
-  conf.input_buf.offs = 24576;
+  conf.input_buf.offs = 0;
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
-  conf.output_buf.offs = 122880;
+  conf.output_buf.offs = 393216;
 
   conf.eltwise_buf.mem = NULL;
   conf.eltwise_buf.offs = 0;  // Input byte address for elementwise add (0 = UBUF Input Buffer)
@@ -841,12 +830,12 @@ void CLaneDetection::Layer_10() {
   conf.run[0].actfunc = 2;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(10);
+  layer.name = "conv2d_8";
   layer.type = LT_CONV;
-  layer.input_offs = 24576;
-  layer.output_offs = 122880;
+  layer.input_offs = 0;
+  layer.output_offs = 393216;
   layer.output_size = 98304;
   layer.input_dim[0] = 24;
   layer.input_dim[1] = 16;
@@ -864,7 +853,6 @@ void CLaneDetection::Layer_10() {
 //Layer_11: Convolution Layer
 //  ->: up_sampling2d_2
 void CLaneDetection::Layer_11() {
-  get_layer(11).name = "up_sampling2d_2";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(11).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -878,11 +866,11 @@ void CLaneDetection::Layer_11() {
   conf.z = 1;  // Input Depth
   conf.c = 128;  // Input Channels
   conf.input_buf.mem = io_mem_;
-  conf.input_buf.offs = 122880;
+  conf.input_buf.offs = 393216;
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
-  conf.output_buf.offs = 221184;
+  conf.output_buf.offs = 0;
 
   conf.eltwise_buf.mem = NULL;
   conf.eltwise_buf.offs = 0;  // Input byte address for elementwise add (0 = UBUF Input Buffer)
@@ -912,12 +900,12 @@ void CLaneDetection::Layer_11() {
   conf.run[0].actfunc = 0;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(11);
+  layer.name = "up_sampling2d_2";
   layer.type = LT_CONV;
-  layer.input_offs = 122880;
-  layer.output_offs = 221184;
+  layer.input_offs = 393216;
+  layer.output_offs = 0;
   layer.output_size = 393216;
   layer.input_dim[0] = 24;
   layer.input_dim[1] = 16;
@@ -936,7 +924,6 @@ void CLaneDetection::Layer_11() {
 //  ->: conv2d_9
 //  ->: conv2d_9_relu
 void CLaneDetection::Layer_12() {
-  get_layer(12).name = "conv2d_9, conv2d_9_relu";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(12).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -950,11 +937,11 @@ void CLaneDetection::Layer_12() {
   conf.z = 1;  // Input Depth
   conf.c = 128;  // Input Channels
   conf.input_buf.mem = io_mem_;
-  conf.input_buf.offs = 221184;
+  conf.input_buf.offs = 0;
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
-  conf.output_buf.offs = 0;
+  conf.output_buf.offs = 786432;
 
   conf.eltwise_buf.mem = NULL;
   conf.eltwise_buf.offs = 0;  // Input byte address for elementwise add (0 = UBUF Input Buffer)
@@ -985,12 +972,12 @@ void CLaneDetection::Layer_12() {
   conf.run[0].actfunc = 2;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(12);
+  layer.name = "conv2d_9";
   layer.type = LT_CONV;
-  layer.input_offs = 221184;
-  layer.output_offs = 0;
+  layer.input_offs = 0;
+  layer.output_offs = 786432;
   layer.output_size = 196608;
   layer.input_dim[0] = 48;
   layer.input_dim[1] = 32;
@@ -1008,7 +995,6 @@ void CLaneDetection::Layer_12() {
 //Layer_13: Convolution Layer
 //  ->: up_sampling2d_3
 void CLaneDetection::Layer_13() {
-  get_layer(13).name = "up_sampling2d_3";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(13).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -1022,11 +1008,11 @@ void CLaneDetection::Layer_13() {
   conf.z = 1;  // Input Depth
   conf.c = 64;  // Input Channels
   conf.input_buf.mem = io_mem_;
-  conf.input_buf.offs = 0;
+  conf.input_buf.offs = 786432;
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
-  conf.output_buf.offs = 196608;
+  conf.output_buf.offs = 0;
 
   conf.eltwise_buf.mem = NULL;
   conf.eltwise_buf.offs = 0;  // Input byte address for elementwise add (0 = UBUF Input Buffer)
@@ -1056,12 +1042,12 @@ void CLaneDetection::Layer_13() {
   conf.run[0].actfunc = 0;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(13);
+  layer.name = "up_sampling2d_3";
   layer.type = LT_CONV;
-  layer.input_offs = 0;
-  layer.output_offs = 196608;
+  layer.input_offs = 786432;
+  layer.output_offs = 0;
   layer.output_size = 786432;
   layer.input_dim[0] = 48;
   layer.input_dim[1] = 32;
@@ -1080,7 +1066,6 @@ void CLaneDetection::Layer_13() {
 //  ->: conv2d_10
 //  ->: conv2d_10_relu
 void CLaneDetection::Layer_14() {
-  get_layer(14).name = "conv2d_10, conv2d_10_relu";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(14).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -1094,11 +1079,11 @@ void CLaneDetection::Layer_14() {
   conf.z = 1;  // Input Depth
   conf.c = 64;  // Input Channels
   conf.input_buf.mem = io_mem_;
-  conf.input_buf.offs = 196608;
+  conf.input_buf.offs = 0;
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
-  conf.output_buf.offs = 983040;
+  conf.output_buf.offs = 1572864;
 
   conf.eltwise_buf.mem = NULL;
   conf.eltwise_buf.offs = 0;  // Input byte address for elementwise add (0 = UBUF Input Buffer)
@@ -1129,12 +1114,12 @@ void CLaneDetection::Layer_14() {
   conf.run[0].actfunc = 2;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(14);
+  layer.name = "conv2d_10";
   layer.type = LT_CONV;
-  layer.input_offs = 196608;
-  layer.output_offs = 983040;
+  layer.input_offs = 0;
+  layer.output_offs = 1572864;
   layer.output_size = 393216;
   layer.input_dim[0] = 96;
   layer.input_dim[1] = 64;
@@ -1152,7 +1137,6 @@ void CLaneDetection::Layer_14() {
 //Layer_15: Convolution Layer
 //  ->: up_sampling2d_4
 void CLaneDetection::Layer_15() {
-  get_layer(15).name = "up_sampling2d_4";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(15).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -1166,11 +1150,11 @@ void CLaneDetection::Layer_15() {
   conf.z = 1;  // Input Depth
   conf.c = 32;  // Input Channels
   conf.input_buf.mem = io_mem_;
-  conf.input_buf.offs = 983040;
+  conf.input_buf.offs = 1572864;
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
-  conf.output_buf.offs = 1376256;
+  conf.output_buf.offs = 0;
 
   conf.eltwise_buf.mem = NULL;
   conf.eltwise_buf.offs = 0;  // Input byte address for elementwise add (0 = UBUF Input Buffer)
@@ -1200,12 +1184,12 @@ void CLaneDetection::Layer_15() {
   conf.run[0].actfunc = 0;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(15);
+  layer.name = "up_sampling2d_4";
   layer.type = LT_CONV;
-  layer.input_offs = 983040;
-  layer.output_offs = 1376256;
+  layer.input_offs = 1572864;
+  layer.output_offs = 0;
   layer.output_size = 1572864;
   layer.input_dim[0] = 96;
   layer.input_dim[1] = 64;
@@ -1224,7 +1208,6 @@ void CLaneDetection::Layer_15() {
 //  ->: conv2d_11
 //  ->: conv2d_11_relu
 void CLaneDetection::Layer_16() {
-  get_layer(16).name = "conv2d_11, conv2d_11_relu";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(16).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -1238,11 +1221,11 @@ void CLaneDetection::Layer_16() {
   conf.z = 1;  // Input Depth
   conf.c = 32;  // Input Channels
   conf.input_buf.mem = io_mem_;
-  conf.input_buf.offs = 1376256;
+  conf.input_buf.offs = 0;
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
-  conf.output_buf.offs = 0;
+  conf.output_buf.offs = 3538944;
 
   conf.eltwise_buf.mem = NULL;
   conf.eltwise_buf.offs = 0;  // Input byte address for elementwise add (0 = UBUF Input Buffer)
@@ -1273,12 +1256,12 @@ void CLaneDetection::Layer_16() {
   conf.run[0].actfunc = 2;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(16);
+  layer.name = "conv2d_11";
   layer.type = LT_CONV;
-  layer.input_offs = 1376256;
-  layer.output_offs = 0;
+  layer.input_offs = 0;
+  layer.output_offs = 3538944;
   layer.output_size = 786432;
   layer.input_dim[0] = 192;
   layer.input_dim[1] = 128;
@@ -1296,7 +1279,6 @@ void CLaneDetection::Layer_16() {
 //Layer_17: Convolution Layer
 //  ->: up_sampling2d_5
 void CLaneDetection::Layer_17() {
-  get_layer(17).name = "up_sampling2d_5";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(17).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -1310,11 +1292,11 @@ void CLaneDetection::Layer_17() {
   conf.z = 1;  // Input Depth
   conf.c = 16;  // Input Channels
   conf.input_buf.mem = io_mem_;
-  conf.input_buf.offs = 0;
+  conf.input_buf.offs = 3538944;
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
-  conf.output_buf.offs = 786432;
+  conf.output_buf.offs = 393216;
 
   conf.eltwise_buf.mem = NULL;
   conf.eltwise_buf.offs = 0;  // Input byte address for elementwise add (0 = UBUF Input Buffer)
@@ -1344,12 +1326,12 @@ void CLaneDetection::Layer_17() {
   conf.run[0].actfunc = 0;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(17);
+  layer.name = "up_sampling2d_5";
   layer.type = LT_CONV;
-  layer.input_offs = 0;
-  layer.output_offs = 786432;
+  layer.input_offs = 3538944;
+  layer.output_offs = 393216;
   layer.output_size = 3145728;
   layer.input_dim[0] = 192;
   layer.input_dim[1] = 128;
@@ -1368,7 +1350,6 @@ void CLaneDetection::Layer_17() {
 //  ->: conv2d_12
 //  ->: conv2d_12_relu
 void CLaneDetection::Layer_18() {
-  get_layer(18).name = "conv2d_12, conv2d_12_relu";
   dmp_dv_cmdraw_conv_v0& conf = get_layer(18).conv_conf;
   conf.header.size = sizeof(conf);
   conf.header.device_type = DMP_DV_DEV_CONV;
@@ -1382,7 +1363,7 @@ void CLaneDetection::Layer_18() {
   conf.z = 1;  // Input Depth
   conf.c = 16;  // Input Channels
   conf.input_buf.mem = io_mem_;
-  conf.input_buf.offs = 786432;
+  conf.input_buf.offs = 393216;
 
   // Output Configuration:
   conf.output_buf.mem = io_mem_;
@@ -1417,21 +1398,19 @@ void CLaneDetection::Layer_18() {
   conf.run[0].actfunc = 2;  // Activation Function: 0 = None, 1 = Tanh, 2 = Leaky ReLU, 3 = Sigmoid, 4 = PReLU, 5 = ELU, 6 = ReLU6
   conf.run[0].actfunc_param = 0x0;  // Leaky ReLU parameter (NOTE: 0x2E66 is 0.1 in FP16)
   conf.run[0].rectifi_en = 0;  // Rectification, i.e. max(0, x) (NOTE: Can be applied after non-ReLU activation function)
-  conf.run[0].lrn = 0x0;  // [0] : 1 = LRN enable, 0 = LRN disable, [1] : 1 = incl. power func, 0 = excl., [8:11] = x^2 scale factor log2
 
   fpga_layer& layer = get_layer(18);
+  layer.name = "dmp_conv_flat_0";
   layer.type = LT_CONV;
-  layer.input_offs = 786432;
+  layer.input_offs = 393216;
   layer.output_offs = 0;
   layer.output_size = 393216;
   layer.input_dim[0] = 384;
   layer.input_dim[1] = 256;
   layer.input_dim[2] = 16;
   layer.input_dim_size = 3;
-  layer.output_dim[0] = 384;
-  layer.output_dim[1] = 256;
-  layer.output_dim[2] = 2;
-  layer.output_dim_size = 3;
+  layer.output_dim[0] = 196608;
+  layer.output_dim_size = 1;
   layer.is_output = true;
   layer.is_f32_output = false;
   layer.is_input_hw_layout = true;

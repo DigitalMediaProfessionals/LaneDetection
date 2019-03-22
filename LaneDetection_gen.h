@@ -228,7 +228,7 @@ class CLaneDetection : public CDMP_Network {
 
   | ID | Layers | Type | Dim In | Dim Out | Param | Mem |
   | :- | :- | :-: | :-: | :-: | :-: | :-: |
-  | 18 | FPGA-Layer | Convolution | (384, 256, 16) | (384, 256, 2) | - | - |
+  | 18 | FPGA-Layer | Convolution | (384, 256, 16) | (196608,) | - | - |
   | 18-0 | conv2d_12 | Convolution | (384, 256, 16) | (384, 256, 2) | - | 592 |
 
   */
