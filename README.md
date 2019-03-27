@@ -13,7 +13,7 @@ See help on bottom right of screen
 
 ## YOLOv3 in LaneDetection
 
-YOLOv3_gen.cpp/.h are built from model/yolov3.ini,
+YOLOv3_gen.cpp/.h are built from model/yolov3.ini.
 The model is the same as one of `dv-sdk/application/YOLOv3`,
 so that you do not need to copy the generated weight file
 if one of YOLOv3 exists in `dv-sdk/application/bin` already.
