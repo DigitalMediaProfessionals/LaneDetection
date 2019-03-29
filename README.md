@@ -1,6 +1,6 @@
 # LaneDetection : Lane Detection + YOLOv3
 
-![LaneDetection Result](https://github.com/DigitalMediaProfessionals/LaneDetection/LaneDetection.png)
+![LaneDetection Result](https://raw.githubusercontent.com/DigitalMediaProfessionals/LaneDetection/master/LaneDetection.png)
 
 ## Syntax
 ```
