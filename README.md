@@ -4,8 +4,9 @@
 ```
 $ sudo ./LaneDetection {image_path} {frame_step}
 ```
-default image_path : ./images_lane
-default frame_step : 1
+
+* default image_path : ./images_lane
+* default frame_step : 1
 
 ## Keyboard controls
 
