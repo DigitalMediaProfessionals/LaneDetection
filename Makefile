@@ -8,7 +8,7 @@ LFLAGS = -pthread $(LIB)
 
 DEPS = LaneDetection_gen.h LaneDetection_param.h YOLOv3_gen.h YOLOv3_param.h
 OBJS = LaneDetection.o LaneDetection_gen.o LaneDetection_post.o YOLOv3_gen.o YOLOv3_post.o
-TGT  = ../bin/LaneDetection
+TGT  = ./bin/LaneDetection
 
 all: $(TGT)
 
